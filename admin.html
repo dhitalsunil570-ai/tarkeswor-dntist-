@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Admin Panel – Tarkeswor Dentist</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css"/>
+<style>
+body{background:#f4f6f9}
+#login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center}
+.sidebar{width:240px;min-height:100vh;background:#1a1a2e;color:#fff;position:fixed;top:0;left:0;z-index:100;overflow-y:auto}
+.sidebar .brand{padding:20px;font-size:1.1rem;font-weight:700;border-bottom:1px solid rgba(255,255,255,.1)}
+.sidebar a{display:block;padding:12px 20px;color:rgba(255,255,255,.75);text-decoration:none;transition:.2s;font-size:.9rem}
+.sidebar a:hover,.sidebar a.active{background:rgba(255,255,255,.1);color:#fff}
+.sidebar a i{width:20px;margin-right:8px}
+.main-content{margin-left:240px;padding:24px}
+.section-panel{display:none}.section-panel.active{display:block}
+.card{border:none;box-shadow:0 2px 8px rgba(0,0,0,.08);border-radius:12px}
+.card-header{background:#0d6efd;color:#fff;border-radius:12px 12px 0 0!important;padding:14px 20px}
+.table-responsive{max-height:400px;overflow-y:auto}
+.img-preview{width:60px;height:45px;object-fit:cover;border-radius:6px}
+.badge-pending{background:#ffc107;color:#000}
+.badge-confirmed{background:#198754}
+.badge-cancelled{background:#dc3545}
+.modal-header{background:#0d6efd;color:#fff}
+.modal-header .btn-close{filter:invert(1)}
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen">
+  <div class="card" style="width:380px">
+    <div class="card-header text-center">
+      <h4 class="mb-0"><i class="fas fa-tooth me-2"></i>Admin Login</h4>
+      <small>Tarkeswor Dentist Pvt. Ltd.</small>
+    </div>
+    <div class="card-body p-4">
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Password</label>
+        <input type="password" id="login-pw" class="form-control form-control-lg" placeholder="Enter admin password" onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <button class="btn btn-primary w-100 btn-lg" onclick="doLogin()"><i class="fas fa-sign-in-alt me-2"></i>Login</button>
+      <div id="login-err" class="alert alert-danger mt-3 d-none">Wrong password!</div>
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN DASHBOARD (hidden until logged in) -->
+<div id="admin-dashboard" style="display:none">
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="brand"><i class="fas fa-tooth me-2"></i>Admin Panel</div>
+    <a href="#" class="active" onclick="showSection('settings',this)"><i class="fas fa-cog"></i>Site Settings</a>
+    <a href="#" onclick="showSection('services',this)"><i class="fas fa-teeth"></i>Services</a>
+    <a href="#" onclick="showSection('features',this)"><i class="fas fa-star"></i>Why Choose Us</a>
+    <a href="#" onclick="showSection('solutions',this)"><i class="fas fa-lightbulb"></i>Solutions</a>
+    <a href="#" onclick="showSection('gallery',this)"><i class="fas fa-images"></i>Gallery</a>
+    <a href="#" onclick="showSection('doctors',this)"><i class="fas fa-user-md"></i>Doctors</a>
+    <a href="#" onclick="showSection('reviews',this)"><i class="fas fa-star-half-alt"></i>Reviews</a>
+    <a href="#" onclick="showSection('blog',this)"><i class="fas fa-blog"></i>Blog</a>
+    <a href="#" onclick="showSection('bookings',this)"><i class="fas fa-calendar-check"></i>Bookings</a>
+    <hr style="border-color:rgba(255,255,255,.2)">
+    <a href="index.html" target="_blank"><i class="fas fa-external-link-alt"></i>View Site</a>
+    <a href="#" onclick="logout()"><i class="fas fa-sign-out-alt"></i>Logout</a>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+
+    <!-- ===== SETTINGS ===== -->
+    <div id="section-settings" class="section-panel active">
+      <h3 class="mb-4"><i class="fas fa-cog text-primary me-2"></i>Site Settings</h3>
+      <form id="settings-form" onsubmit="saveSettings(event)">
+        <div class="row g-4">
+          <div class="col-12"><div class="card">
+            <div class="card-header"><i class="fas fa-id-card me-2"></i>Branding & Identity</div>
+            <div class="card-body row g-3">
+              <div class="col-md-4"><label class="form-label">Site Name</label><input class="form-control" name="site_name" placeholder="Tarkeswor Dentist Pvt. Ltd."></div>
+              <div class="col-md-4"><label class="form-label">Logo Text (Navbar)</label><input class="form-control" name="logo_text" placeholder="Tarkeswor Dentist"></div>
+              <div class="col-md-4"><label class="form-label">Logo Image URL (optional)</label><input class="form-control" name="logo_url" placeholder="https://...logo.png"></div>
+              <div class="col-md-4"><label class="form-label">Tagline</label><input class="form-control" name="tagline" placeholder="Dental Care Center"></div>
+            </div>
+          </div></div>
+          <div class="col-12"><div class="card">
+            <div class="card-header"><i class="fas fa-bullhorn me-2"></i>Banner / Hero</div>
+            <div class="card-body row g-3">
+              <div class="col-md-6"><label class="form-label">Banner Subtitle</label><input class="form-control" name="banner_subtitle" placeholder="Dental Care Center"></div>
+              <div class="col-md-6"><label class="form-label">Banner Title</label><input class="form-control" name="banner_title" placeholder="Best Dental Care..."></div>
+              <div class="col-12"><label class="form-label">Banner Text</label><textarea class="form-control" name="banner_text" rows="2"></textarea></div>
+              <div class="col-md-6"><label class="form-label">Banner Image 1 URL</label><input class="form-control" name="banner_image1" placeholder="img/carousel-1.jpg"></div>
+              <div class="col-md-6"><label class="form-label">Banner Image 2 URL</label><input class="form-control" name="banner_image2" placeholder="img/carousel-2.jpg"></div>
+            </div>
+          </div></div>
+          <div class="col-12"><div class="card">
+            <div class="card-header"><i class="fas fa-info-circle me-2"></i>About Section</div>
+            <div class="card-body row g-3">
+              <div class="col-md-6"><label class="form-label">About Title</label><input class="form-control" name="about_title"></div>
+              <div class="col-md-6"><label class="form-label">Experience Badge</label><input class="form-control" name="about_experience" placeholder="15 years experience"></div>
+              <div class="col-12"><label class="form-label">About Text</label><textarea class="form-control" name="about_text" rows="3"></textarea></div>
+              <div class="col-md-6"><label class="form-label">About Image 1 URL</label><input class="form-control" name="about_image1" placeholder="img/about-1.jpg"></div>
+              <div class="col-md-6"><label class="form-label">About Image 2 URL</label><input class="form-control" name="about_image2" placeholder="img/about-2.jpg"></div>
+              <div class="col-md-4"><label class="form-label">Checkmark 1</label><input class="form-control" name="about_check1"></div>
+              <div class="col-md-4"><label class="form-label">Checkmark 2</label><input class="form-control" name="about_check2"></div>
+              <div class="col-md-4"><label class="form-label">Checkmark 3</label><input class="form-control" name="about_check3"></div>
+            </div>
+          </div></div>
+          <div class="col-12"><div class="card">
+            <div class="card-header"><i class="fas fa-address-book me-2"></i>Contact & Location</div>
+            <div class="card-body row g-3">
+              <div class="col-md-4"><label class="form-label">Phone</label><input class="form-control" name="phone" placeholder="+977 98XXXXXXXX"></div>
+              <div class="col-md-4"><label class="form-label">Email</label><input class="form-control" name="email" type="email"></div>
+              <div class="col-md-4"><label class="form-label">Address</label><input class="form-control" name="address"></div>
+              <div class="col-md-6"><label class="form-label">Google Maps URL</label><input class="form-control" name="location_url" placeholder="https://maps.google.com/..."></div>
+              <div class="col-md-6"><label class="form-label">WhatsApp Number (for bookings)</label><input class="form-control" name="whatsapp_number" placeholder="9779800000000"></div>
+            </div>
+          </div></div>
+          <div class="col-12"><div class="card">
+            <div class="card-header"><i class="fas fa-share-alt me-2"></i>Social Media</div>
+            <div class="card-body row g-3">
+              <div class="col-md-3"><label class="form-label"><i class="fab fa-facebook text-primary me-1"></i>Facebook URL</label><input class="form-control" name="facebook" placeholder="https://facebook.com/..."></div>
+              <div class="col-md-3"><label class="form-label"><i class="fab fa-twitter text-info me-1"></i>Twitter URL</label><input class="form-control" name="twitter" placeholder="https://twitter.com/..."></div>
+              <div class="col-md-3"><label class="form-label"><i class="fab fa-instagram text-danger me-1"></i>Instagram URL</label><input class="form-control" name="instagram" placeholder="https://instagram.com/..."></div>
+              <div class="col-md-3"><label class="form-label"><i class="fab fa-linkedin text-primary me-1"></i>LinkedIn URL</label><input class="form-control" name="linkedin" placeholder="https://linkedin.com/..."></div>
+            </div>
+          </div></div>
+          <div class="col-12"><div class="card">
+            <div class="card-header"><i class="fas fa-search me-2"></i>SEO</div>
+            <div class="card-body row g-3">
+              <div class="col-md-6"><label class="form-label">SEO Title</label><input class="form-control" name="seo_title"></div>
+              <div class="col-md-6"><label class="form-label">SEO Keywords</label><input class="form-control" name="seo_keywords"></div>
+              <div class="col-12"><label class="form-label">SEO Description</label><textarea class="form-control" name="seo_description" rows="2"></textarea></div>
+            </div>
+          </div></div>
+          <div class="col-12">
+            <button type="submit" class="btn btn-primary btn-lg px-5"><i class="fas fa-save me-2"></i>Save All Settings</button>
+            <span id="settings-msg" class="ms-3 text-success fw-semibold d-none">Saved!</span>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <!-- ===== SERVICES ===== -->
+    <div id="section-services" class="section-panel">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3><i class="fas fa-teeth text-primary me-2"></i>Dental Services</h3>
+        <button class="btn btn-primary" onclick="openModal('service')"><i class="fas fa-plus me-1"></i>Add Service</button>
+      </div>
+      <div class="card"><div class="card-body p-0">
+        <div class="table-responsive"><table class="table table-hover mb-0">
+          <thead class="table-dark"><tr><th>Image</th><th>Title</th><th>Description</th><th>Order</th><th>Actions</th></tr></thead>
+          <tbody id="services-table"></tbody>
+        </table></div>
+      </div></div>
+    </div>
+
+    <!-- ===== FEATURES ===== -->
+    <div id="section-features" class="section-panel">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3><i class="fas fa-star text-primary me-2"></i>Why Choose Us</h3>
+        <button class="btn btn-primary" onclick="openModal('feature')"><i class="fas fa-plus me-1"></i>Add Feature</button>
+      </div>
+      <div class="card"><div class="card-body p-0">
+        <div class="table-responsive"><table class="table table-hover mb-0">
+          <thead class="table-dark"><tr><th>Icon</th><th>Title</th><th>Description</th><th>Order</th><th>Actions</th></tr></thead>
+          <tbody id="features-table"></tbody>
+        </table></div>
+      </div></div>
+    </div>
+
+    <!-- ===== SOLUTIONS ===== -->
+    <div id="section-solutions" class="section-panel">
+      <h3 class="mb-4"><i class="fas fa-lightbulb text-primary me-2"></i>Solutions Section</h3>
+      <div class="card mb-4"><div class="card-header">Section Header</div>
+        <div class="card-body row g-3">
+          <div class="col-md-6"><label class="form-label">Subtitle</label><input id="sol-sub" class="form-control"></div>
+          <div class="col-md-6"><label class="form-label">Title</label><input id="sol-ttl" class="form-control"></div>
+          <div class="col-12"><label class="form-label">Description</label><textarea id="sol-dsc" class="form-control" rows="2"></textarea></div>
+          <div class="col-md-6"><label class="form-label">Video URL (YouTube embed)</label><input id="sol-vid" class="form-control" placeholder="https://www.youtube.com/embed/..."></div>
+          <div class="col-md-6"><label class="form-label">Side Image URL</label><input id="sol-img" class="form-control" placeholder="img/video-img.jpg"></div>
+          <div class="col-12"><button class="btn btn-primary" onclick="saveSolutionMeta()"><i class="fas fa-save me-1"></i>Save Header</button></div>
+        </div>
+      </div>
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0">Solution Items (Checkpoints)</h5>
+        <button class="btn btn-sm btn-primary" onclick="openModal('solution-item')"><i class="fas fa-plus me-1"></i>Add Item</button>
+      </div>
+      <div class="card"><div class="card-body p-0">
+        <div class="table-responsive"><table class="table table-hover mb-0">
+          <thead class="table-dark"><tr><th>Title</th><th>Description</th><th>Order</th><th>Actions</th></tr></thead>
+          <tbody id="solutions-table"></tbody>
+        </table></div>
+      </div></div>
+    </div>
+
+    <!-- ===== GALLERY ===== -->
+    <div id="section-gallery" class="section-panel">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3><i class="fas fa-images text-primary me-2"></i>Facility Gallery</h3>
+        <button class="btn btn-primary" onclick="openModal('gallery')"><i class="fas fa-plus me-1"></i>Add Image</button>
+      </div>
+      <div id="gallery-admin-grid" class="row g-3"></div>
+    </div>
+
+    <!-- ===== DOCTORS ===== -->
+    <div id="section-doctors" class="section-panel">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3><i class="fas fa-user-md text-primary me-2"></i>Doctors</h3>
+        <button class="btn btn-primary" onclick="openModal('doctor')"><i class="fas fa-plus me-1"></i>Add Doctor</button>
+      </div>
+      <div class="row g-3" id="doctors-admin-grid"></div>
+    </div>
+
+    <!-- ===== REVIEWS ===== -->
+    <div id="section-reviews" class="section-panel">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3><i class="fas fa-star-half-alt text-primary me-2"></i>Reviews</h3>
+        <button class="btn btn-primary" onclick="openModal('review')"><i class="fas fa-plus me-1"></i>Add Review</button>
+      </div>
+      <div class="card"><div class="card-body p-0">
+        <div class="table-responsive"><table class="table table-hover mb-0">
+          <thead class="table-dark"><tr><th>Photo</th><th>Name</th><th>Role</th><th>Rating</th><th>Review</th><th>Actions</th></tr></thead>
+          <tbody id="reviews-table"></tbody>
+        </table></div>
+      </div></div>
+    </div>
+
+    <!-- ===== BLOG ===== -->
+    <div id="section-blog" class="section-panel">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3><i class="fas fa-blog text-primary me-2"></i>Blog Posts</h3>
+        <button class="btn btn-primary" onclick="openModal('blog')"><i class="fas fa-plus me-1"></i>Add Post</button>
+      </div>
+      <div class="card"><div class="card-body p-0">
+        <div class="table-responsive"><table class="table table-hover mb-0">
+          <thead class="table-dark"><tr><th>Image</th><th>Title</th><th>Author</th><th>Date</th><th>Actions</th></tr></thead>
+          <tbody id="blog-table"></tbody>
+        </table></div>
+      </div></div>
+    </div>
+
+    <!-- ===== BOOKINGS ===== -->
+    <div id="section-bookings" class="section-panel">
+      <h3 class="mb-4"><i class="fas fa-calendar-check text-primary me-2"></i>Appointment Bookings</h3>
+      <div class="card"><div class="card-body p-0">
+        <div class="table-responsive"><table class="table table-hover mb-0">
+          <thead class="table-dark"><tr><th>#</th><th>Name</th><th>Phone</th><th>Email</th><th>Gender</th><th>Date</th><th>Dept</th><th>Comment</th><th>Status</th><th>Booked At</th><th>Actions</th></tr></thead>
+          <tbody id="bookings-table"></tbody>
+        </table></div>
+      </div></div>
+    </div>
+
+  </div><!-- /main-content -->
+</div><!-- /admin-dashboard -->
+
+<!-- ===== MODALS ===== -->
+
+<!-- Service Modal -->
+<div class="modal fade" id="serviceModal" tabindex="-1">
+  <div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title" id="serviceModalTitle">Add Service</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+      <input type="hidden" id="svc-id">
+      <div class="mb-3"><label class="form-label">Image URL</label><input id="svc-image" class="form-control" placeholder="img/service-1.jpg"></div>
+      <div class="mb-3"><label class="form-label">Title</label><input id="svc-title" class="form-control" placeholder="General Dentistry"></div>
+      <div class="mb-3"><label class="form-label">Description</label><textarea id="svc-desc" class="form-control" rows="3"></textarea></div>
+      <div class="mb-3"><label class="form-label">Sort Order</label><input id="svc-order" class="form-control" type="number" value="0"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+      <button class="btn btn-primary" onclick="saveService()">Save</button>
+    </div>
+  </div></div>
+</div>
+
+<!-- Feature Modal -->
+<div class="modal fade" id="featureModal" tabindex="-1">
+  <div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title" id="featureModalTitle">Add Feature</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+      <input type="hidden" id="feat-id">
+      <div class="mb-3"><label class="form-label">Font Awesome Icon Class</label><input id="feat-icon" class="form-control" placeholder="fas fa-tooth"><small class="text-muted">e.g. fas fa-tooth, fas fa-user-md, fas fa-heart</small></div>
+      <div class="mb-3"><label class="form-label">Title</label><input id="feat-title" class="form-control"></div>
+      <div class="mb-3"><label class="form-label">Description</label><textarea id="feat-desc" class="form-control" rows="3"></textarea></div>
+      <div class="mb-3"><label class="form-label">Sort Order</label><input id="feat-order" class="form-control" type="number" value="0"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+      <button class="btn btn-primary" onclick="saveFeature()">Save</button>
+    </div>
+  </div></div>
+</div>
+
+<!-- Solution Item Modal -->
+<div class="modal fade" id="solutionItemModal" tabindex="-1">
+  <div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title" id="solItemModalTitle">Add Solution Item</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+      <input type="hidden" id="solitem-id">
+      <div class="mb-3"><label class="form-label">Title</label><input id="solitem-title" class="form-control"></div>
+      <div class="mb-3"><label class="form-label">Description</label><textarea id="solitem-desc" class="form-control" rows="3"></textarea></div>
+      <div class="mb-3"><label class="form-label">Sort Order</label><input id="solitem-order" class="form-control" type="number" value="0"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+      <button class="btn btn-primary" onclick="saveSolutionItem()">Save</button>
+    </div>
+  </div></div>
+</div>
+
+<!-- Gallery Modal -->
+<div class="modal fade" id="galleryModal" tabindex="-1">
+  <div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title" id="galleryModalTitle">Add Gallery Image</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+      <input type="hidden" id="gall-id">
+      <div class="mb-3"><label class="form-label">Image URL</label><input id="gall-url" class="form-control" placeholder="https://... or img/service-1.jpg"></div>
+      <div class="mb-3"><label class="form-label">Caption (optional)</label><input id="gall-caption" class="form-control"></div>
+      <div class="mb-3"><label class="form-label">Sort Order</label><input id="gall-order" class="form-control" type="number" value="0"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+      <button class="btn btn-primary" onclick="saveGallery()">Save</button>
+    </div>
+  </div></div>
+</div>
+
+<!-- Doctor Modal -->
+<div class="modal fade" id="doctorModal" tabindex="-1">
+  <div class="modal-dialog modal-lg"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title" id="doctorModalTitle">Add Doctor</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+      <input type="hidden" id="doc-id">
+      <div class="row g-3">
+        <div class="col-md-6"><label class="form-label">Full Name</label><input id="doc-name" class="form-control" placeholder="Dr. Full Name"></div>
+        <div class="col-md-6"><label class="form-label">Avatar/Photo URL</label><input id="doc-avatar" class="form-control" placeholder="img/team-1.jpg"></div>
+        <div class="col-md-6"><label class="form-label">Category / Specialty</label><input id="doc-category" class="form-control" placeholder="General Dentistry"></div>
+        <div class="col-md-6"><label class="form-label">Level / Title</label><input id="doc-level" class="form-control" placeholder="Senior Dentist"></div>
+        <div class="col-md-4"><label class="form-label">Experience</label><input id="doc-exp" class="form-control" placeholder="10 Years"></div>
+        <div class="col-md-4"><label class="form-label">Phone</label><input id="doc-phone" class="form-control" placeholder="+977 98..."></div>
+        <div class="col-md-4"><label class="form-label">Email</label><input id="doc-email" class="form-control" type="email"></div>
+        <div class="col-12"><label class="form-label">Address</label><input id="doc-address" class="form-control"></div>
+        <div class="col-12"><label class="form-label">Detail / Bio</label><textarea id="doc-detail" class="form-control" rows="3" placeholder="About this doctor..."></textarea></div>
+        <div class="col-md-3"><label class="form-label"><i class="fab fa-facebook text-primary me-1"></i>Facebook</label><input id="doc-fb" class="form-control" placeholder="https://..."></div>
+        <div class="col-md-3"><label class="form-label"><i class="fab fa-twitter text-info me-1"></i>Twitter</label><input id="doc-tw" class="form-control" placeholder="https://..."></div>
+        <div class="col-md-3"><label class="form-label"><i class="fab fa-instagram text-danger me-1"></i>Instagram</label><input id="doc-ig" class="form-control" placeholder="https://..."></div>
+        <div class="col-md-3"><label class="form-label"><i class="fab fa-linkedin text-primary me-1"></i>LinkedIn</label><input id="doc-li" class="form-control" placeholder="https://..."></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+      <button class="btn btn-primary" onclick="saveDoctor()">Save Doctor</button>
+    </div>
+  </div></div>
+</div>
+
+<!-- Review Modal -->
+<div class="modal fade" id="reviewModal" tabindex="-1">
+  <div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title" id="reviewModalTitle">Add Review</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+      <input type="hidden" id="rev-id">
+      <div class="mb-3"><label class="form-label">Patient Name</label><input id="rev-name" class="form-control"></div>
+      <div class="mb-3"><label class="form-label">Role</label><input id="rev-role" class="form-control" value="Patient"></div>
+      <div class="mb-3"><label class="form-label">Photo URL</label><input id="rev-image" class="form-control" placeholder="img/testimonial-img.jpg"></div>
+      <div class="mb-3"><label class="form-label">Rating (1-5)</label><input id="rev-rating" class="form-control" type="number" min="1" max="5" value="5"></div>
+      <div class="mb-3"><label class="form-label">Review Text</label><textarea id="rev-review" class="form-control" rows="4"></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+      <button class="btn btn-primary" onclick="saveReview()">Save</button>
+    </div>
+  </div></div>
+</div>
+
+<!-- Blog Modal -->
+<div class="modal fade" id="blogModal" tabindex="-1">
+  <div class="modal-dialog modal-lg"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title" id="blogModalTitle">Add Blog Post</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+      <input type="hidden" id="blg-id">
+      <div class="mb-3"><label class="form-label">Image URL</label><input id="blg-image" class="form-control" placeholder="img/blog-1.jpg"></div>
+      <div class="mb-3"><label class="form-label">Title</label><input id="blg-title" class="form-control"></div>
+      <div class="mb-3"><label class="form-label">Excerpt (short summary)</label><textarea id="blg-excerpt" class="form-control" rows="2"></textarea></div>
+      <div class="mb-3"><label class="form-label">Content</label><textarea id="blg-content" class="form-control" rows="5"></textarea></div>
+      <div class="row g-3">
+        <div class="col-md-6"><label class="form-label">Author</label><input id="blg-author" class="form-control" value="Admin"></div>
+        <div class="col-md-6"><label class="form-label">Published Date</label><input id="blg-date" class="form-control" placeholder="June 15, 2025"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+      <button class="btn btn-primary" onclick="saveBlog()">Save Post</button>
+    </div>
+  </div></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+const API = '/api';
+let TOKEN = localStorage.getItem('admin_token') || '';
+
+async function adminFetch(path, opts={}) {
+  const headers = {'Content-Type':'application/json', 'Authorization': 'Bearer '+TOKEN, ...(opts.headers||{})};
+  const r = await fetch(API+path, {...opts, headers});
+  if (r.status === 401) { logout(); return null; }
+  return r.json();
+}
+
+// ---- AUTH ----
+async function doLogin() {
+  const pw = document.getElementById('login-pw').value;
+  const r = await fetch(API+'/admin/login', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({password:pw})});
+  const data = await r.json();
+  if (data.token) {
+    TOKEN = data.token;
+    localStorage.setItem('admin_token', TOKEN);
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('admin-dashboard').style.display = '';
+    loadSection('settings');
+  } else {
+    document.getElementById('login-err').classList.remove('d-none');
+  }
+}
+
+function logout() {
+  localStorage.removeItem('admin_token');
+  TOKEN = '';
+  document.getElementById('login-screen').style.display = '';
+  document.getElementById('admin-dashboard').style.display = 'none';
+}
+
+// Auto-login if token exists
+if (TOKEN) {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('admin-dashboard').style.display = '';
+  setTimeout(() => loadSection('settings'), 100);
+}
+
+// ---- NAVIGATION ----
+function showSection(name, el) {
+  document.querySelectorAll('.section-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.sidebar a').forEach(a => a.classList.remove('active'));
+  document.getElementById('section-'+name).classList.add('active');
+  if (el) el.classList.add('active');
+  loadSection(name);
+}
+
+function loadSection(name) {
+  const loaders = {
+    settings: loadSettings, services: loadServices, features: loadFeatures,
+    solutions: loadSolutions, gallery: loadGallery, doctors: loadDoctors,
+    reviews: loadReviews, blog: loadBlog, bookings: loadBookings
+  };
+  if (loaders[name]) loaders[name]();
+}
+
+// ---- SETTINGS ----
+async function loadSettings() {
+  const data = await adminFetch('/admin/settings');
+  if (!data) return;
+  const form = document.getElementById('settings-form');
+  for (const [k, v] of Object.entries(data)) {
+    const el = form.querySelector('[name="'+k+'"]');
+    if (el) el.value = v;
+  }
+}
+
+async function saveSettings(e) {
+  e.preventDefault();
+  const form = document.getElementById('settings-form');
+  const data = {};
+  form.querySelectorAll('[name]').forEach(el => { data[el.name] = el.value; });
+  await adminFetch('/admin/settings', {method:'PUT', body:JSON.stringify(data)});
+  const msg = document.getElementById('settings-msg');
+  msg.classList.remove('d-none');
+  setTimeout(() => msg.classList.add('d-none'), 3000);
+}
+
+// ---- SERVICES ----
+let serviceData = [];
+async function loadServices() {
+  serviceData = await adminFetch('/admin/services') || [];
+  const tbody = document.getElementById('services-table');
+  tbody.innerHTML = serviceData.map(s => `<tr>
+    <td><img src="${s.image}" class="img-preview" alt="" onerror="this.src='img/service-1.jpg'"></td>
+    <td>${s.title}</td><td>${s.description.substring(0,60)}...</td><td>${s.sortOrder}</td>
+    <td>
+      <button class="btn btn-sm btn-outline-primary me-1" onclick="editService(${s.id})"><i class="fas fa-edit"></i></button>
+      <button class="btn btn-sm btn-outline-danger" onclick="deleteItem('/admin/services',${s.id},loadServices)"><i class="fas fa-trash"></i></button>
+    </td></tr>`).join('');
+}
+
+function openModal(type, data={}) {
+  const modals = {service:'serviceModal',feature:'featureModal','solution-item':'solutionItemModal',gallery:'galleryModal',doctor:'doctorModal',review:'reviewModal',blog:'blogModal'};
+  bootstrap.Modal.getOrCreateInstance(document.getElementById(modals[type])).show();
+}
+
+function editService(id) {
+  const s = serviceData.find(x=>x.id===id);
+  document.getElementById('svc-id').value = id;
+  document.getElementById('svc-image').value = s.image;
+  document.getElementById('svc-title').value = s.title;
+  document.getElementById('svc-desc').value = s.description;
+  document.getElementById('svc-order').value = s.sortOrder;
+  document.getElementById('serviceModalTitle').textContent = 'Edit Service';
+  openModal('service');
+}
+
+async function saveService() {
+  const id = document.getElementById('svc-id').value;
+  const data = {image:document.getElementById('svc-image').value, title:document.getElementById('svc-title').value, description:document.getElementById('svc-desc').value, sortOrder:parseInt(document.getElementById('svc-order').value)||0};
+  if (id) await adminFetch('/admin/services/'+id, {method:'PUT', body:JSON.stringify(data)});
+  else await adminFetch('/admin/services', {method:'POST', body:JSON.stringify(data)});
+  bootstrap.Modal.getInstance(document.getElementById('serviceModal')).hide();
+  document.getElementById('svc-id').value='';
+  document.getElementById('serviceModalTitle').textContent='Add Service';
+  loadServices();
+}
+
+// ---- FEATURES ----
+let featData = [];
+async function loadFeatures() {
+  featData = await adminFetch('/admin/features') || [];
+  const tbody = document.getElementById('features-table');
+  tbody.innerHTML = featData.map(f => `<tr>
+    <td><i class="${f.icon} text-primary fa-lg"></i> <small>${f.icon}</small></td>
+    <td>${f.title}</td><td>${f.description.substring(0,60)}...</td><td>${f.sortOrder}</td>
+    <td>
+      <button class="btn btn-sm btn-outline-primary me-1" onclick="editFeature(${f.id})"><i class="fas fa-edit"></i></button>
+      <button class="btn btn-sm btn-outline-danger" onclick="deleteItem('/admin/features',${f.id},loadFeatures)"><i class="fas fa-trash"></i></button>
+    </td></tr>`).join('');
+}
+
+function editFeature(id) {
+  const f = featData.find(x=>x.id===id);
+  document.getElementById('feat-id').value=id;
+  document.getElementById('feat-icon').value=f.icon;
+  document.getElementById('feat-title').value=f.title;
+  document.getElementById('feat-desc').value=f.description;
+  document.getElementById('feat-order').value=f.sortOrder;
+  document.getElementById('featureModalTitle').textContent='Edit Feature';
+  openModal('feature');
+}
+
+async function saveFeature() {
+  const id = document.getElementById('feat-id').value;
+  const data = {icon:document.getElementById('feat-icon').value, title:document.getElementById('feat-title').value, description:document.getElementById('feat-desc').value, sortOrder:parseInt(document.getElementById('feat-order').value)||0};
+  if (id) await adminFetch('/admin/features/'+id, {method:'PUT', body:JSON.stringify(data)});
+  else await adminFetch('/admin/features', {method:'POST', body:JSON.stringify(data)});
+  bootstrap.Modal.getInstance(document.getElementById('featureModal')).hide();
+  document.getElementById('feat-id').value='';
+  document.getElementById('featureModalTitle').textContent='Add Feature';
+  loadFeatures();
+}
+
+// ---- SOLUTIONS ----
+let solItemData = [];
+async function loadSolutions() {
+  const data = await adminFetch('/admin/solutions');
+  if (!data) return;
+  if (data.meta) {
+    document.getElementById('sol-sub').value=data.meta.subtitle||'';
+    document.getElementById('sol-ttl').value=data.meta.title||'';
+    document.getElementById('sol-dsc').value=data.meta.description||'';
+    document.getElementById('sol-vid').value=data.meta.videoUrl||'';
+    document.getElementById('sol-img').value=data.meta.imageUrl||'';
+  }
+  solItemData = data.items||[];
+  const tbody = document.getElementById('solutions-table');
+  tbody.innerHTML = solItemData.map(it => `<tr>
+    <td>${it.title}</td><td>${it.description.substring(0,60)}...</td><td>${it.sortOrder}</td>
+    <td>
+      <button class="btn btn-sm btn-outline-primary me-1" onclick="editSolItem(${it.id})"><i class="fas fa-edit"></i></button>
+      <button class="btn btn-sm btn-outline-danger" onclick="deleteItem('/admin/solutions/items',${it.id},loadSolutions)"><i class="fas fa-trash"></i></button>
+    </td></tr>`).join('');
+}
+
+async function saveSolutionMeta() {
+  const data = {subtitle:document.getElementById('sol-sub').value, title:document.getElementById('sol-ttl').value, description:document.getElementById('sol-dsc').value, videoUrl:document.getElementById('sol-vid').value, imageUrl:document.getElementById('sol-img').value};
+  await adminFetch('/admin/solutions/meta', {method:'PUT', body:JSON.stringify(data)});
+  alert('Solutions header saved!');
+}
+
+function editSolItem(id) {
+  const it = solItemData.find(x=>x.id===id);
+  document.getElementById('solitem-id').value=id;
+  document.getElementById('solitem-title').value=it.title;
+  document.getElementById('solitem-desc').value=it.description;
+  document.getElementById('solitem-order').value=it.sortOrder;
+  document.getElementById('solItemModalTitle').textContent='Edit Solution Item';
+  openModal('solution-item');
+}
+
+async function saveSolutionItem() {
+  const id = document.getElementById('solitem-id').value;
+  const data = {title:document.getElementById('solitem-title').value, description:document.getElementById('solitem-desc').value, sortOrder:parseInt(document.getElementById('solitem-order').value)||0};
+  if (id) await adminFetch('/admin/solutions/items/'+id, {method:'PUT', body:JSON.stringify(data)});
+  else await adminFetch('/admin/solutions/items', {method:'POST', body:JSON.stringify(data)});
+  bootstrap.Modal.getInstance(document.getElementById('solutionItemModal')).hide();
+  document.getElementById('solitem-id').value='';
+  document.getElementById('solItemModalTitle').textContent='Add Solution Item';
+  loadSolutions();
+}
+
+// ---- GALLERY ----
+let gallData = [];
+async function loadGallery() {
+  gallData = await adminFetch('/admin/gallery') || [];
+  const grid = document.getElementById('gallery-admin-grid');
+  grid.innerHTML = gallData.map(g => `
+    <div class="col-md-3 col-sm-4">
+      <div class="card h-100">
+        <img src="${g.imageUrl}" class="card-img-top" style="height:160px;object-fit:cover;" onerror="this.style.background='#eee'">
+        <div class="card-body p-2">
+          <small class="text-muted">${g.caption||'No caption'}</small>
+        </div>
+        <div class="card-footer p-1 d-flex gap-1">
+          <button class="btn btn-sm btn-outline-primary flex-fill" onclick="editGallery(${g.id})"><i class="fas fa-edit"></i></button>
+          <button class="btn btn-sm btn-outline-danger flex-fill" onclick="deleteItem('/admin/gallery',${g.id},loadGallery)"><i class="fas fa-trash"></i></button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function editGallery(id) {
+  const g = gallData.find(x=>x.id===id);
+  document.getElementById('gall-id').value=id;
+  document.getElementById('gall-url').value=g.imageUrl;
+  document.getElementById('gall-caption').value=g.caption;
+  document.getElementById('gall-order').value=g.sortOrder;
+  document.getElementById('galleryModalTitle').textContent='Edit Gallery Image';
+  openModal('gallery');
+}
+
+async function saveGallery() {
+  const id = document.getElementById('gall-id').value;
+  const data = {imageUrl:document.getElementById('gall-url').value, caption:document.getElementById('gall-caption').value, sortOrder:parseInt(document.getElementById('gall-order').value)||0};
+  if (id) await adminFetch('/admin/gallery/'+id, {method:'PUT', body:JSON.stringify(data)});
+  else await adminFetch('/admin/gallery', {method:'POST', body:JSON.stringify(data)});
+  bootstrap.Modal.getInstance(document.getElementById('galleryModal')).hide();
+  document.getElementById('gall-id').value='';
+  document.getElementById('galleryModalTitle').textContent='Add Gallery Image';
+  loadGallery();
+}
+
+// ---- DOCTORS ----
+let docData = [];
+async function loadDoctors() {
+  docData = await adminFetch('/admin/doctors') || [];
+  const grid = document.getElementById('doctors-admin-grid');
+  grid.innerHTML = docData.map(d => `
+    <div class="col-md-4 col-lg-3">
+      <div class="card h-100 text-center">
+        <img src="${d.avatarUrl}" class="card-img-top" style="height:180px;object-fit:cover;" onerror="this.style.background='#eee'">
+        <div class="card-body p-3">
+          <h6 class="mb-1">${d.name}</h6>
+          <small class="text-primary">${d.category}</small><br>
+          <small class="text-muted">${d.level}</small><br>
+          <small><i class="fas fa-phone me-1 text-primary"></i>${d.phone||'N/A'}</small>
+        </div>
+        <div class="card-footer d-flex gap-1">
+          <button class="btn btn-sm btn-outline-primary flex-fill" onclick="editDoctor(${d.id})"><i class="fas fa-edit"></i> Edit</button>
+          <button class="btn btn-sm btn-outline-danger flex-fill" onclick="deleteItem('/admin/doctors',${d.id},loadDoctors)"><i class="fas fa-trash"></i></button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function editDoctor(id) {
+  const d = docData.find(x=>x.id===id);
+  document.getElementById('doc-id').value=id;
+  document.getElementById('doc-name').value=d.name;
+  document.getElementById('doc-avatar').value=d.avatarUrl;
+  document.getElementById('doc-category').value=d.category;
+  document.getElementById('doc-level').value=d.level;
+  document.getElementById('doc-exp').value=d.experience;
+  document.getElementById('doc-phone').value=d.phone;
+  document.getElementById('doc-email').value=d.email;
+  document.getElementById('doc-address').value=d.address;
+  document.getElementById('doc-detail').value=d.detail;
+  document.getElementById('doc-fb').value=d.facebook;
+  document.getElementById('doc-tw').value=d.twitter;
+  document.getElementById('doc-ig').value=d.instagram;
+  document.getElementById('doc-li').value=d.linkedin;
+  document.getElementById('doctorModalTitle').textContent='Edit Doctor';
+  openModal('doctor');
+}
+
+async function saveDoctor() {
+  const id = document.getElementById('doc-id').value;
+  const data = {
+    name:document.getElementById('doc-name').value,
+    avatarUrl:document.getElementById('doc-avatar').value,
+    category:document.getElementById('doc-category').value,
+    level:document.getElementById('doc-level').value,
+    experience:document.getElementById('doc-exp').value,
+    phone:document.getElementById('doc-phone').value,
+    email:document.getElementById('doc-email').value,
+    address:document.getElementById('doc-address').value,
+    detail:document.getElementById('doc-detail').value,
+    facebook:document.getElementById('doc-fb').value,
+    twitter:document.getElementById('doc-tw').value,
+    instagram:document.getElementById('doc-ig').value,
+    linkedin:document.getElementById('doc-li').value,
+  };
+  if (id) await adminFetch('/admin/doctors/'+id, {method:'PUT', body:JSON.stringify(data)});
+  else await adminFetch('/admin/doctors', {method:'POST', body:JSON.stringify(data)});
+  bootstrap.Modal.getInstance(document.getElementById('doctorModal')).hide();
+  document.getElementById('doc-id').value='';
+  document.getElementById('doctorModalTitle').textContent='Add Doctor';
+  loadDoctors();
+}
+
+// ---- REVIEWS ----
+let revData = [];
+async function loadReviews() {
+  revData = await adminFetch('/admin/reviews') || [];
+  const tbody = document.getElementById('reviews-table');
+  tbody.innerHTML = revData.map(r => `<tr>
+    <td><img src="${r.image}" class="img-preview rounded-circle" style="width:40px;height:40px;object-fit:cover;"></td>
+    <td>${r.name}</td><td>${r.role}</td>
+    <td>${'⭐'.repeat(r.rating)}</td>
+    <td>${r.review.substring(0,60)}...</td>
+    <td>
+      <button class="btn btn-sm btn-outline-primary me-1" onclick="editReview(${r.id})"><i class="fas fa-edit"></i></button>
+      <button class="btn btn-sm btn-outline-danger" onclick="deleteItem('/admin/reviews',${r.id},loadReviews)"><i class="fas fa-trash"></i></button>
+    </td></tr>`).join('');
+}
+
+function editReview(id) {
+  const r = revData.find(x=>x.id===id);
+  document.getElementById('rev-id').value=id;
+  document.getElementById('rev-name').value=r.name;
+  document.getElementById('rev-role').value=r.role;
+  document.getElementById('rev-image').value=r.image;
+  document.getElementById('rev-rating').value=r.rating;
+  document.getElementById('rev-review').value=r.review;
+  document.getElementById('reviewModalTitle').textContent='Edit Review';
+  openModal('review');
+}
+
+async function saveReview() {
+  const id = document.getElementById('rev-id').value;
+  const data = {name:document.getElementById('rev-name').value, role:document.getElementById('rev-role').value, image:document.getElementById('rev-image').value, rating:parseInt(document.getElementById('rev-rating').value)||5, review:document.getElementById('rev-review').value};
+  if (id) await adminFetch('/admin/reviews/'+id, {method:'PUT', body:JSON.stringify(data)});
+  else await adminFetch('/admin/reviews', {method:'POST', body:JSON.stringify(data)});
+  bootstrap.Modal.getInstance(document.getElementById('reviewModal')).hide();
+  document.getElementById('rev-id').value='';
+  document.getElementById('reviewModalTitle').textContent='Add Review';
+  loadReviews();
+}
+
+// ---- BLOG ----
+let blgData = [];
+async function loadBlog() {
+  blgData = await adminFetch('/admin/blog') || [];
+  const tbody = document.getElementById('blog-table');
+  tbody.innerHTML = blgData.map(b => `<tr>
+    <td><img src="${b.image}" class="img-preview" onerror="this.style.background='#eee'"></td>
+    <td>${b.title}</td><td>${b.author}</td><td>${b.publishedAt}</td>
+    <td>
+      <button class="btn btn-sm btn-outline-primary me-1" onclick="editBlog(${b.id})"><i class="fas fa-edit"></i></button>
+      <button class="btn btn-sm btn-outline-danger" onclick="deleteItem('/admin/blog',${b.id},loadBlog)"><i class="fas fa-trash"></i></button>
+    </td></tr>`).join('');
+}
+
+function editBlog(id) {
+  const b = blgData.find(x=>x.id===id);
+  document.getElementById('blg-id').value=id;
+  document.getElementById('blg-image').value=b.image;
+  document.getElementById('blg-title').value=b.title;
+  document.getElementById('blg-excerpt').value=b.excerpt;
+  document.getElementById('blg-content').value=b.content;
+  document.getElementById('blg-author').value=b.author;
+  document.getElementById('blg-date').value=b.publishedAt;
+  document.getElementById('blogModalTitle').textContent='Edit Blog Post';
+  openModal('blog');
+}
+
+async function saveBlog() {
+  const id = document.getElementById('blg-id').value;
+  const data = {image:document.getElementById('blg-image').value, title:document.getElementById('blg-title').value, excerpt:document.getElementById('blg-excerpt').value, content:document.getElementById('blg-content').value, author:document.getElementById('blg-author').value, publishedAt:document.getElementById('blg-date').value};
+  if (id) await adminFetch('/admin/blog/'+id, {method:'PUT', body:JSON.stringify(data)});
+  else await adminFetch('/admin/blog', {method:'POST', body:JSON.stringify(data)});
+  bootstrap.Modal.getInstance(document.getElementById('blogModal')).hide();
+  document.getElementById('blg-id').value='';
+  document.getElementById('blogModalTitle').textContent='Add Blog Post';
+  loadBlog();
+}
+
+// ---- BOOKINGS ----
+async function loadBookings() {
+  const data = await adminFetch('/bookings') || [];
+  const tbody = document.getElementById('bookings-table');
+  tbody.innerHTML = data.map((b,i) => `<tr>
+    <td>${i+1}</td>
+    <td><strong>${b.name}</strong></td>
+    <td><a href="tel:${b.phone}">${b.phone}</a></td>
+    <td>${b.email}</td>
+    <td>${b.gender||'-'}</td>
+    <td>${b.date||'-'}</td>
+    <td>${b.department||'-'}</td>
+    <td>${b.comment?b.comment.substring(0,40)+'...':'-'}</td>
+    <td>
+      <select class="form-select form-select-sm" style="min-width:110px" onchange="updateBookingStatus(${b.id},this.value)">
+        <option value="pending" ${b.status==='pending'?'selected':''}>Pending</option>
+        <option value="confirmed" ${b.status==='confirmed'?'selected':''}>Confirmed</option>
+        <option value="cancelled" ${b.status==='cancelled'?'selected':''}>Cancelled</option>
+      </select>
+    </td>
+    <td><small>${new Date(b.createdAt).toLocaleString()}</small></td>
+    <td>
+      <a href="https://wa.me/${encodeURIComponent(b.phone)}?text=${encodeURIComponent('Hello '+b.name+', your appointment at Tarkeswor Dentist is confirmed.')}" target="_blank" class="btn btn-sm btn-success me-1" title="WhatsApp"><i class="fab fa-whatsapp"></i></a>
+      <button class="btn btn-sm btn-outline-danger" onclick="deleteItem('/bookings',${b.id},loadBookings)"><i class="fas fa-trash"></i></button>
+    </td></tr>`).join('');
+}
+
+async function updateBookingStatus(id, status) {
+  await adminFetch('/bookings/'+id+'/status', {method:'PATCH', body:JSON.stringify({status})});
+}
+
+// ---- UTIL ----
+async function deleteItem(path, id, reload) {
+  if (!confirm('Delete this item?')) return;
+  await adminFetch(path+'/'+id, {method:'DELETE'});
+  reload();
+}
+</script>
+</body>
+</html>
